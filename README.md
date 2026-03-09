@@ -12,7 +12,7 @@ An AI-powered news assistant that provides personalized news with summaries, cre
 ## Setup
 
 ### 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/ai-news-assistant.git
+git clone https://github.com/snehanair-486/ai-news-assistant.git
 cd ai-news-assistant
 
 ### 2. Backend setup
