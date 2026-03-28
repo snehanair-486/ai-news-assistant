@@ -1,18 +1,27 @@
 import { useState } from "react";
-import { BIAS_COLORS, credibilityColor } from "../constants";
+import { BIAS_COLORS, PERSONAS } from "../constants";
 
 const VERDICT_STYLES = {
-  "Verified": { icon: "✅", color: "#16a34a", background: "#f0fdf4", border: "#bbf7d0" },
-  "Unverified": { icon: "⚠️", color: "#ca8a04", background: "#fefce8", border: "#fde68a" },
-  "Likely False": { icon: "❌", color: "#dc2626", background: "#fef2f2", border: "#fecaca" },
+  "Verified":     { icon: "✓", color: "#16a34a", background: "rgba(22,163,74,0.07)",   border: "rgba(22,163,74,0.2)"   },
+  "Unverified":   { icon: "~", color: "#d97706", background: "rgba(217,119,6,0.07)",   border: "rgba(217,119,6,0.2)"   },
+  "Likely False": { icon: "✕", color: "#dc2626", background: "rgba(220,38,38,0.07)",   border: "rgba(220,38,38,0.2)"   },
 };
 
-export default function NewsCard({ article, index }) {
+const credibilityColor = (score) => {
+  if (score >= 75) return "#16a34a";
+  if (score >= 50) return "#d97706";
+  return "#dc2626";
+};
+
+export default function NewsCard({ article, index, persona, accentColor }) {
   const [factCheck, setFactCheck] = useState(null);
   const [checking, setChecking] = useState(false);
 
   const source = article.title?.split(" - ").pop()?.toUpperCase() || "NEWS";
   const headline = article.title?.split(" - ")[0] || article.title;
+  const personaInfo = PERSONAS.find(p => p.id === persona);
+  const summaryLabel = personaInfo ? `${personaInfo.emoji} ${personaInfo.label.toUpperCase()} TAKE` : "AI SUMMARY";
+  const cardAccent = accentColor || "var(--accent)";
 
   const handleFactCheck = async () => {
     setChecking(true);
@@ -21,29 +30,17 @@ export default function NewsCard({ article, index }) {
       const res = await fetch("http://localhost:5000/factcheck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: article.title,
-          text: article.description || article.title,
-        }),
+        body: JSON.stringify({ title: article.title, text: article.description || article.title }),
       });
-      const data = await res.json();
-      setFactCheck(data);
-    } catch (err) {
-      console.error("Fact-check error:", err);
-      setFactCheck({
-        verdict: "Unverified",
-        explanation: "Could not complete fact-check at this time.",
-        claim: "",
-        sourceCount: 0,
-      });
+      setFactCheck(await res.json());
+    } catch {
+      setFactCheck({ verdict: "Unverified", explanation: "Could not complete fact-check at this time.", claim: "", sourceCount: 0 });
     } finally {
       setChecking(false);
     }
   };
 
-  const verdictStyle = factCheck
-    ? VERDICT_STYLES[factCheck.verdict] || VERDICT_STYLES["Unverified"]
-    : null;
+  const verdictStyle = factCheck ? VERDICT_STYLES[factCheck.verdict] || VERDICT_STYLES["Unverified"] : null;
 
   return (
     <div className="news-card" style={{ animationDelay: `${index * 0.08}s` }}>
@@ -51,18 +48,23 @@ export default function NewsCard({ article, index }) {
       {/* ── Source + Badges ── */}
       <div style={{
         display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: "12px",
+        alignItems: "center", marginBottom: "16px",
         flexWrap: "wrap", gap: "8px",
       }}>
-        <span style={{ fontSize: "10px", color: "#bfdbfe", fontFamily: "monospace", letterSpacing: "1.5px", fontWeight: "600" }}>
+        <span style={{
+          fontSize: "10px", color: "var(--text-muted)",
+          fontFamily: "var(--font-body)", letterSpacing: "0.12em",
+          fontWeight: "600", textTransform: "uppercase",
+        }}>
           {source}
         </span>
         <div style={{ display: "flex", gap: "6px" }}>
           {article.bias && (
             <span style={{
               padding: "3px 10px", borderRadius: "100px", fontSize: "11px",
-              fontFamily: "monospace", color: BIAS_COLORS[article.bias],
-              background: `${BIAS_COLORS[article.bias]}15`,
+              fontFamily: "var(--font-body)", letterSpacing: "0.04em",
+              color: BIAS_COLORS[article.bias],
+              background: `${BIAS_COLORS[article.bias]}18`,
               border: `1px solid ${BIAS_COLORS[article.bias]}35`,
             }}>
               {article.bias}
@@ -71,8 +73,9 @@ export default function NewsCard({ article, index }) {
           {article.credibilityScore !== undefined && (
             <span style={{
               padding: "3px 10px", borderRadius: "100px", fontSize: "11px",
-              fontFamily: "monospace", color: credibilityColor(article.credibilityScore),
-              background: `${credibilityColor(article.credibilityScore)}15`,
+              fontFamily: "var(--font-body)", letterSpacing: "0.04em",
+              color: credibilityColor(article.credibilityScore),
+              background: `${credibilityColor(article.credibilityScore)}18`,
               border: `1px solid ${credibilityColor(article.credibilityScore)}35`,
             }}>
               ✓ {article.credibilityScore}/100
@@ -83,27 +86,32 @@ export default function NewsCard({ article, index }) {
 
       {/* ── Headline ── */}
       <h3 style={{
-        fontSize: "17px", fontWeight: "700", color: "#1e3a8a",
-        lineHeight: 1.45, marginBottom: "14px",
-        fontFamily: "'Playfair Display', serif",
+        fontSize: "18px", fontWeight: "500", color: "var(--text-primary)",
+        lineHeight: 1.5, marginBottom: "18px",
+        fontFamily: "var(--font-display)", letterSpacing: "-0.01em",
       }}>
         {headline}
       </h3>
 
-      <div style={{ height: "1px", background: "#dbeafe", marginBottom: "14px" }} />
+      <div style={{ height: "1px", background: "var(--border-soft)", marginBottom: "18px" }} />
 
       {/* ── AI Summary ── */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", marginBottom: "20px" }}>
         <span style={{
-          fontSize: "9px", letterSpacing: "2px", color: "#2563eb",
-          fontFamily: "monospace", fontWeight: "700",
-          paddingTop: "3px", whiteSpace: "nowrap",
+          fontSize: "9px", letterSpacing: "0.12em",
+          color: cardAccent,
+          fontFamily: "var(--font-body)", fontWeight: "600",
+          paddingTop: "4px", whiteSpace: "nowrap", textTransform: "uppercase",
         }}>
-          AI SUMMARY
+          {summaryLabel}
         </span>
-        <p style={{ margin: 0, fontSize: "13.5px", lineHeight: 1.75, color: "#475569" }}>
+        <p style={{
+          margin: 0, fontSize: "14px", lineHeight: 1.8,
+          color: "var(--text-secondary)", fontWeight: "300",
+          letterSpacing: "0.02em",
+        }}>
           {article.aiSummary || (
-            <span style={{ color: "#bfdbfe", fontStyle: "italic" }}>Analyzing...</span>
+            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Analyzing...</span>
           )}
         </p>
       </div>
@@ -114,30 +122,32 @@ export default function NewsCard({ article, index }) {
           onClick={handleFactCheck}
           disabled={checking}
           style={{
-            display: "flex", alignItems: "center", gap: "6px",
+            display: "flex", alignItems: "center", gap: "8px",
             padding: "8px 16px",
-            background: checking ? "#f0f4ff" : "#eff6ff",
-            border: "1.5px solid #dbeafe",
-            borderRadius: "8px", color: "#2563eb",
-            fontSize: "12px", fontFamily: "'DM Sans', sans-serif",
-            fontWeight: "600", cursor: checking ? "not-allowed" : "pointer",
-            transition: "all 0.2s", letterSpacing: "0.3px",
+            background: "transparent",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)",
+            color: "var(--text-muted)",
+            fontSize: "12px", fontFamily: "var(--font-body)",
+            fontWeight: "400", letterSpacing: "0.04em",
+            cursor: checking ? "not-allowed" : "pointer",
+            transition: "all 0.2s",
           }}
-          onMouseEnter={e => { if (!checking) e.currentTarget.style.background = "#dbeafe"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = checking ? "#f0f4ff" : "#eff6ff"; }}
+          onMouseEnter={e => { if (!checking) { e.currentTarget.style.borderColor = cardAccent; e.currentTarget.style.color = cardAccent; e.currentTarget.style.background = "var(--accent-soft)"; }}}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "transparent"; }}
         >
           {checking ? (
             <>
               <span style={{
-                width: "12px", height: "12px",
-                border: "2px solid #dbeafe", borderTopColor: "#2563eb",
+                width: "11px", height: "11px",
+                border: "1.5px solid var(--border)", borderTopColor: cardAccent,
                 borderRadius: "50%", display: "inline-block",
                 animation: "spin 0.8s linear infinite",
               }} />
-              Checking across news sources...
+              Checking sources...
             </>
           ) : (
-            <>🔎 Fact Check this article</>
+            <>🔎 Fact check this article</>
           )}
         </button>
       )}
@@ -147,53 +157,60 @@ export default function NewsCard({ article, index }) {
         <div style={{
           marginTop: "4px",
           background: verdictStyle.background,
-          border: `1.5px solid ${verdictStyle.border}`,
-          borderRadius: "10px", padding: "14px 16px",
+          border: `1px solid ${verdictStyle.border}`,
+          borderRadius: "var(--radius-sm)", padding: "16px 18px",
           animation: "fadeUp 0.4s ease forwards",
         }}>
-          {/* Verdict header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "16px" }}>{verdictStyle.icon}</span>
-              <span style={{ fontSize: "13px", fontWeight: "700", color: verdictStyle.color, fontFamily: "monospace", letterSpacing: "0.5px" }}>
-                {factCheck.verdict.toUpperCase()}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{
+                fontSize: "12px", fontWeight: "600", color: verdictStyle.color,
+                fontFamily: "var(--font-body)", letterSpacing: "0.08em",
+              }}>
+                {verdictStyle.icon} {factCheck.verdict.toUpperCase()}
               </span>
-              {/* Source count badge */}
               {factCheck.sourceCount !== undefined && (
                 <span style={{
-                  fontSize: "11px", color: "#64748b",
-                  background: "#f1f5f9", border: "1px solid #e2e8f0",
-                  borderRadius: "100px", padding: "2px 8px",
-                  fontFamily: "monospace",
+                  fontSize: "11px", color: "var(--text-muted)",
+                  background: "var(--bg-elevated)", border: "1px solid var(--border)",
+                  borderRadius: "100px", padding: "2px 9px",
+                  fontFamily: "var(--font-body)", letterSpacing: "0.03em",
                 }}>
-                  {factCheck.sourceCount} source{factCheck.sourceCount !== 1 ? "s" : ""} checked
+                  {factCheck.sourceCount} source{factCheck.sourceCount !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
             <button onClick={() => setFactCheck(null)} style={{
               background: "transparent", border: "none",
-              color: "#93c5fd", fontSize: "11px", cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif",
+              color: "var(--text-muted)", fontSize: "11px", cursor: "pointer",
+              fontFamily: "var(--font-body)", letterSpacing: "0.03em",
             }}>
-              ✕ dismiss
+              dismiss
             </button>
           </div>
 
-          {/* Claim checked */}
           {factCheck.claim && (
-            <p style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginBottom: "8px", lineHeight: 1.5 }}>
-              Claim: "{factCheck.claim}"
+            <p style={{
+              fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic",
+              marginBottom: "10px", lineHeight: 1.6, letterSpacing: "0.02em",
+            }}>
+              "{factCheck.claim}"
             </p>
           )}
 
-          {/* Explanation */}
-          <p style={{ fontSize: "13px", color: "#374151", lineHeight: 1.65, margin: 0 }}>
+          <p style={{
+            fontSize: "13px", color: "var(--text-secondary)",
+            lineHeight: 1.7, margin: 0, fontWeight: "300", letterSpacing: "0.02em",
+          }}>
             {factCheck.explanation}
           </p>
 
-          {/* Source note */}
-          <p style={{ fontSize: "11px", color: "#93c5fd", marginTop: "10px", marginBottom: 0, fontFamily: "monospace" }}>
-            📰 Cross-referenced against live news sources · Analyzed by Groq LLM
+          <p style={{
+            fontSize: "10px", color: "var(--text-muted)", marginTop: "12px",
+            marginBottom: 0, fontFamily: "var(--font-body)",
+            letterSpacing: "0.06em", textTransform: "uppercase",
+          }}>
+            Cross-referenced · Groq LLM
           </p>
         </div>
       )}

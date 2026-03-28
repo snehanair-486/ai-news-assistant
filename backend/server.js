@@ -8,6 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ── Persona → search keywords for default feed ────────────────
+const PERSONA_QUERIES = {
+  investor:     "stock market finance economy investment earnings",
+  founder:      "startup funding venture capital tech entrepreneurship",
+  student:      "science discovery research breakthrough education",
+  professional: "business policy industry economy leadership",
+};
+
 // ── Helper: call Groq with retry ──────────────────────────────
 const callGroq = async (prompt, retries = 3) => {
   for (let i = 0; i < retries; i++) {
@@ -44,8 +52,6 @@ const searchCorroboratingNews = async (searchQuery) => {
     const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&sortBy=relevancy&pageSize=5&apiKey=${process.env.NEWS_API_KEY}`;
     const response = await axios.get(url);
     const articles = response.data.articles || [];
-
-    // Return titles, sources and descriptions of found articles
     return articles.slice(0, 5).map(a => ({
       title: a.title,
       source: a.source?.name || "Unknown",
@@ -60,16 +66,30 @@ const searchCorroboratingNews = async (searchQuery) => {
 // ── GET /news ─────────────────────────────────────────────────
 app.get("/news", async (req, res) => {
   try {
-    const category = req.query.category;
-    const url = category
-      ? `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${process.env.NEWS_API_KEY}`
-      : `https://newsapi.org/v2/top-headlines?country=us&apiKey=${process.env.NEWS_API_KEY}`;
+    const { category, persona } = req.query;
+
+    let url;
+
+    if (category) {
+      // User manually picked a topic — use NewsAPI category headlines
+      url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${process.env.NEWS_API_KEY}`;
+    } else if (persona && PERSONA_QUERIES[persona]) {
+      // Default feed — search by persona keywords for relevant articles
+      const q = encodeURIComponent(PERSONA_QUERIES[persona]);
+      url = `https://newsapi.org/v2/everything?q=${q}&sortBy=publishedAt&pageSize=6&language=en&apiKey=${process.env.NEWS_API_KEY}`;
+    } else {
+      // Fallback
+      url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${process.env.NEWS_API_KEY}`;
+    }
 
     const response = await axios.get(url);
-    const articles = response.data.articles.slice(0, 3).map(article => ({
-      title: article.title,
-      description: article.description,
-    }));
+    const articles = (response.data.articles || [])
+      .filter(a => a.title && a.title !== "[Removed]" && a.description)
+      .slice(0, 3)
+      .map(article => ({
+        title: article.title,
+        description: article.description,
+      }));
 
     res.json(articles);
   } catch (error) {
@@ -87,10 +107,13 @@ app.get("/search", async (req, res) => {
     const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=relevancy&pageSize=3&apiKey=${process.env.NEWS_API_KEY}`;
     const response = await axios.get(url);
 
-    const articles = response.data.articles.slice(0, 3).map(article => ({
-      title: article.title,
-      description: article.description,
-    }));
+    const articles = (response.data.articles || [])
+      .filter(a => a.title && a.title !== "[Removed]")
+      .slice(0, 3)
+      .map(article => ({
+        title: article.title,
+        description: article.description,
+      }));
 
     res.json(articles);
   } catch (error) {
@@ -102,10 +125,16 @@ app.get("/search", async (req, res) => {
 // ── POST /summarize ───────────────────────────────────────────
 app.post("/summarize", async (req, res) => {
   try {
-    const { text } = req.body;
-    const summary = await callGroq(
-      `Summarize this news article in 3 simple sentences:\n\n${text || "No content available."}`
-    );
+    const { text, summaryStyle } = req.body;
+
+    const styleInstruction = summaryStyle ? `\nFraming: ${summaryStyle}` : "";
+
+    const prompt = `Summarize this news article in 2-3 short, plain sentences. No bullet points, no headers, no bold text, no markdown — just clean flowing prose.${styleInstruction}
+
+Article:
+${text || "No content available."}`;
+
+    const summary = await callGroq(prompt);
     console.log("Generated summary:", summary);
     res.json({ summary });
   } catch (error) {
@@ -125,10 +154,7 @@ Article title: ${title}
 Article text: ${text}
 
 Respond with exactly this format:
-{"credibilityScore": <number between 0-100>, "bias": "<one of: Left, Center-Left, Center, Center-Right, Right>"}
-
-Base credibilityScore on: presence of sources, factual tone, sensationalism, clarity.
-Base bias on: political leaning of the framing and language used.`;
+{"credibilityScore": <number between 0-100>, "bias": "<one of: Left, Center-Left, Center, Center-Right, Right>"}`;
 
     const raw = await callGroq(prompt);
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -148,10 +174,9 @@ app.post("/factcheck", async (req, res) => {
   try {
     const { title, text } = req.body;
 
-    // Step 1: Extract claim + search keywords using Groq
     const claimPrompt = `From this news article, extract two things and respond ONLY as JSON, no markdown, no backticks:
 1. The single most important factual claim (one sentence)
-2. A short 3-5 word search query to find corroborating news articles (focus on the key names, events, or topics)
+2. A short 3-5 word search query to find corroborating news articles
 
 Title: ${title}
 Text: ${text}
@@ -164,14 +189,8 @@ Respond with exactly:
     if (!claimJson) throw new Error("No JSON in claim extraction");
 
     const { claim, searchQuery } = JSON.parse(claimJson[0]);
-    console.log("Extracted claim:", claim);
-    console.log("Search query:", searchQuery);
 
-    // Step 2: RETRIEVE corroborating articles from NewsAPI (RAG retrieval)
     const corroboratingArticles = await searchCorroboratingNews(searchQuery);
-    console.log(`Found ${corroboratingArticles.length} corroborating articles`);
-
-    // Format the retrieved sources for Groq
     const sourcesText = corroboratingArticles.length > 0
       ? corroboratingArticles.map((a, i) =>
           `Source ${i + 1} - ${a.source}: "${a.title}" — ${a.description}`
@@ -179,42 +198,34 @@ Respond with exactly:
       : "No corroborating sources found.";
 
     const sourceCount = corroboratingArticles.length;
-
-    // Small delay before next Groq call
     await new Promise(r => setTimeout(r, 3000));
 
-    // Step 3: Augmented generation — Groq evaluates claim vs retrieved sources
-    const factCheckPrompt = `You are a news fact-checker. Evaluate whether the claim is corroborated by multiple news sources.
+    const factCheckPrompt = `You are a news fact-checker. Evaluate whether the claim is corroborated by the retrieved sources.
 
-CLAIM TO VERIFY:
-${claim}
+CLAIM: ${claim}
 
-RETRIEVED NEWS SOURCES (${sourceCount} sources found):
+SOURCES (${sourceCount} found):
 ${sourcesText}
 
-Verdict rules:
-- "Verified": 3 or more sources report the same or very similar information
-- "Unverified": 1-2 sources found, or sources are loosely related but not directly confirming
-- "Likely False": Sources found directly contradict the claim
+Rules:
+- "Verified": 3+ sources confirm it
+- "Unverified": 1-2 sources, loosely related
+- "Likely False": sources contradict it
 
 Respond ONLY with valid JSON, no markdown, no backticks:
-{"verdict": "<Verified, Unverified, or Likely False>", "explanation": "<2-3 sentences. Mention how many sources were found and what they say. Be specific.>", "claim": "<repeat the claim here>", "sourceCount": ${sourceCount}}`;
+{"verdict": "<Verified, Unverified, or Likely False>", "explanation": "<2-3 sentences max>", "claim": "<repeat the claim>", "sourceCount": ${sourceCount}}`;
 
     const raw = await callGroq(factCheckPrompt);
-    console.log("Raw fact-check response:", raw);
-
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON in fact-check response");
     const result = JSON.parse(jsonMatch[0]);
 
-    console.log("Fact-check result:", result);
     res.json(result);
-
   } catch (error) {
     console.error("Fact-check error:", error.response?.data || error.message);
     res.status(500).json({
       verdict: "Unverified",
-      explanation: "Could not complete fact-check at this time. Please try again in a few seconds.",
+      explanation: "Could not complete fact-check at this time.",
       claim: "",
       sourceCount: 0,
     });

@@ -1,5 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Outfit:wght@300;400;500;600&display=swap');
 
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --bg:          #f0f4fa;
+  --bg-card:     #ffffff;
+  --bg-elevated: #e8eef7;
+  --bg-input:    #f5f8fd;
+
+  --border:      #c8d6ea;
+  --border-soft: #dde7f4;
+
+  --text-primary:   #1a2540;
+  --text-secondary: #4a5f82;
+  --text-muted:     #8fa3c0;
+
+  --accent:      #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.08);
+  --accent-dim:  rgba(37, 99, 235, 0.2);
+
+  --green:  #16a34a;
+  --yellow: #d97706;
+  --red:    #dc2626;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Outfit', sans-serif;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,9 +38,12 @@
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background: #f0f4ff;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
 }
 
 #root {
@@ -20,92 +54,107 @@ body {
   text-align: left;
 }
 
-/* ── Inputs ── */
+/* ── Auth inputs ────────────────────────────────────────────── */
 .auth-input {
   width: 100%;
   padding: 13px 16px;
-  border: 1.5px solid #dbeafe;
-  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  font-family: 'DM Sans', sans-serif;
-  color: #1e3a8a;
-  background: #fff;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--bg-input);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.02em;
 }
 .auth-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .auth-input::placeholder {
-  color: #93c5fd;
+  color: var(--text-muted);
 }
 select.auth-input {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2393c5fd' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238fa3c0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 36px;
 }
+select.auth-input option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
 
-/* ── Buttons ── */
+/* ── Auth button ────────────────────────────────────────────── */
 .auth-btn {
   width: 100%;
   padding: 14px;
-  background: #1e3a8a;
-  color: #fff;
+  background: var(--accent);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: 15px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   cursor: pointer;
-  letter-spacing: 0.3px;
-  transition: background 0.2s, transform 0.1s;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
 }
-.auth-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+.auth-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
+}
 .auth-btn:active { transform: translateY(0); }
 
-/* ── Topic chips ── */
+/* ── Topic chips ────────────────────────────────────────────── */
 .topic-chip {
-  padding: 6px 16px;
+  padding: 7px 18px;
   border-radius: 100px;
-  border: 1.5px solid #dbeafe;
+  border: 1.5px solid var(--border);
   background: transparent;
-  color: #93c5fd;
+  color: var(--text-secondary);
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0.03em;
   cursor: pointer;
   transition: all 0.18s;
   white-space: nowrap;
 }
-.topic-chip:hover:not(:disabled) { border-color: #2563eb; color: #2563eb; }
-.topic-chip.active {
-  border-color: #2563eb;
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 600;
+.topic-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
-.topic-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+.topic-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+}
+.topic-chip:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ── News card ── */
+/* ── News card ──────────────────────────────────────────────── */
 .news-card {
-  background: #fff;
-  border: 1px solid #dbeafe;
-  border-radius: 16px;
-  padding: 28px 32px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 20px rgba(37, 99, 235, 0.06);
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 30px 34px;
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06);
   animation: slideInCard 0.45s ease forwards;
-  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+  transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
 }
 .news-card:hover {
-  box-shadow: 0 6px 30px rgba(37, 99, 235, 0.12);
-  border-color: #bfdbfe;
-  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.12);
+  border-color: var(--border);
+  transform: translateY(-3px);
 }
 
-/* ── Animations ── */
+/* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -115,7 +164,7 @@ select.auth-input {
   to   { opacity: 1; }
 }
 @keyframes slideInCard {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes spin {
