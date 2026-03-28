@@ -1,16 +1,12 @@
 # ai-news-assistant
 
-An AI-powered news assistant that provides personalized news with summaries, credibility scores, bias detection, and fact-checking.
+An AI-powered news assistant that provides personalized news with summaries, credibility scores, bias detection, and fact-checking - tailored to your persona.
 
 ## Features
 - AI-generated summaries using Groq LLM
 - Credibility scoring and bias detection
 - RAG-based fact checking across live news sources
 - Topic filtering and search
-
-# AI-Based News Assistant
-
-An AI-powered news app that delivers personalized summaries, credibility scores, and bias analysis — tailored to your persona.
 
 ---
 
