@@ -7,7 +7,6 @@ An AI-powered news assistant that provides personalized news with summaries, cre
 - Credibility scoring and bias detection
 - RAG-based fact checking across live news sources
 - Topic filtering and search
-- User login and language preferences
 
 # AI-Based News Assistant
 
