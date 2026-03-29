@@ -5,13 +5,32 @@ An AI-powered, persona-aware news experience that goes beyond static feeds. Ever
 ---
 
 ## ✨ Features
-- Persona-aware summaries: Tell the app who you are (investor, founder, student, professional) and every summary is rewritten to match your context
-- Credibility scoring: Each article gets a 0–100 trust score based on source reputation and claim quality
-- Bias detection: Political, economic, and editorial bias is flagged alongside every story
-- RAG fact-checking: Key claims are cross-referenced against other live news sources in real time
-- Topic filtering and search: Browse by category or search by keyword to build your own feed
+- Persona-aware AI generated summaries
+- Credibility scoring
+- Bias detection
+- RAG based fact-checking across live news sources
+- Topic filtering and search
 
 ---
+
+## 🔄 How it works
+ 
+1. **Fetch** — live articles pulled from NewsAPI by topic or search term
+2. **Summarize** — Groq LLM rewrites each article into 3-4 sentences based on your persona
+3. **Score** — source reputation and claim quality evaluated to produce a 0-100 credibility score
+4. **Detect bias** — model flags political, economic, or editorial bias in the article's framing
+5. **Fact-check** — key claims cross-referenced against other live sources
+
+--
+
+## 🛠 Tech Stack
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express
+- **AI:** Groq LLM (llama-3.1-8b-instant)
+- **News:** NewsAPI
+- **Fact-checking:** RAG pipeline with live news sources
+
+--
 
 ## ⚙️ Setup
 
@@ -56,13 +75,3 @@ npm install
 npm run dev
 ```
 
----
-
-The app will be running at `http://localhost:5173` and the backend at `http://localhost:5000`.
-
-## Tech Stack
-- Frontend: React + Vite
-- Backend: Node.js + Express
-- AI: Groq LLM (llama-3.1-8b-instant)
-- News: NewsAPI
-- Fact-checking: RAG pipeline with live news sources
