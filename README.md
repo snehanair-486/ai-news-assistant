@@ -19,7 +19,7 @@ An AI-powered, persona-aware news experience that goes beyond static feeds. Ever
 2. **Summarize** - Groq LLM rewrites each article into 3-4 sentences based on your persona
 3. **Score** - source reputation and claim quality evaluated to produce a 0-100 credibility score
 4. **Detect bias** - model flags political, economic, or editorial bias in the article's framing
-5. **Fact-check** - key claims cross-referenced against other live sources
+5. **Fact-check** - key claims cross-referenced against other live sources, labeled as Verified, Unverified, or Likely False
 
 ---
 
