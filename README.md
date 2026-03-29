@@ -1,12 +1,15 @@
 # ai-news-assistant
 
-An AI-powered news assistant that provides personalized news with summaries, credibility scores, bias detection, and fact-checking - tailored to your persona.
+An AI-powered, persona-aware news experience that goes beyond static feeds. Every article is enriched with an AI summary, credibility score, bias flag, and real-time fact-check, all tailored to who you are.
 
-## Features
-- AI-generated summaries using Groq LLM
-- Credibility scoring and bias detection
-- RAG-based fact checking across live news sources
-- Topic filtering and search
+---
+
+## ✨ Features
+- Persona-aware summaries: Tell the app who you are (investor, founder, student, professional) and every summary is rewritten to match your context
+- Credibility scoring: Each article gets a 0–100 trust score based on source reputation and claim quality
+- Bias detection: Political, economic, and editorial bias is flagged alongside every story
+- RAG fact-checking: Key claims are cross-referenced against other live news sources in real time
+- Topic filtering and search: Browse by category or search by keyword to build your own feed
 
 ---
 
