@@ -1,4 +1,4 @@
-# ai-news-assistant
+# AI News Assistant
 
 An AI-powered, persona-aware news experience that goes beyond static feeds. Every article is enriched with an AI summary, credibility score, bias flag, and real-time fact-check, all tailored to who you are.
 
